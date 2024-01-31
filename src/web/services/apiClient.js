@@ -1,5 +1,6 @@
-import config from '@/web/config';
-import axios, { AxiosError } from 'axios'; 
+import config from '@/web/config'
+import axios, { AxiosError } from 'axios'
+
 export class ApiClientError extends Error {
   data = null
 
@@ -21,26 +22,26 @@ export class ApiClientError extends Error {
     this.message = data?.error?.message || data?.error || data
   }
 }
-
-const createApiClient = (method = 'GET') => (...args) => {
-  const client = axios.create({
-    baseURL: config.api.baseUrl,
-  })
-
-  return client[method.toLowerCase()](...args)
-    .then(({ data }) => data)
-    .catch((err) => {
-      if (!(err instanceof AxiosError)) {
-        throw err
-      }
-
-      throw new ApiClientError(err)
+const createApiClient =
+  (method = 'GET') =>
+  (...args) => {
+    const client = axios.create({
+      baseURL: config.api.baseUrl,
     })
-}
 
-const apiClient = createApiClient();
-apiClient.post = createApiClient('POST');
-apiClient.patch = createApiClient('PATCH');
-apiClient.delete = createApiClient('DELETE');
+    return client[method.toLowerCase()](...args)
+      .then(({ data }) => data)
+      .catch((err) => {
+        if (!(err instanceof AxiosError)) {
+          throw err
+        }
 
-export default apiClient;
+        throw new ApiClientError(err)
+      })
+  }
+const apiClient = createApiClient()
+apiClient.post = createApiClient('POST')
+apiClient.patch = createApiClient('PATCH')
+apiClient.delete = createApiClient('DELETE')
+
+export default apiClient
