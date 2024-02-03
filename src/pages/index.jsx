@@ -3,17 +3,25 @@ import Loader from "@/web/components/ui/Loader"
 import Pagination from "@/web/components/ui/Pagination"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useRouter } from "next/router"
-import apiClient from "../web/services/apiClient"
+import apiClient from "@/web/services/apiClient"
 
 export const getServerSideProps = async ({ query: { page } }) => {
   try {
-    const data = await apiClient("/todos", { params: { page } });
+    console.log("Fetching todos for page:", page);
+    const data = await apiClient("/todos", { params: { page } })
+    console.log("Data received:", data)
     return {
       props: { initialData: data },
     };
   } catch (error) {
-    console.error("Error in getServerSideProps:", error); 
-    throw error;
+    console.error("Error in getServerSideProps:", error)
+    if (error instanceof AggregateError) {
+      console.error("AggregateError details:", error.errors)
+    }
+
+    return {
+      props: { initialData: { result: [], meta: { count: 0 } } },
+    }
   }
 }
 

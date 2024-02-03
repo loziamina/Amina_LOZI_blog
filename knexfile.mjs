@@ -1,11 +1,10 @@
-// knexfile.mjs
-import { config } from "dotenv";
+import { config as dotenvConfig } from "dotenv"
 
-config({ path: ".env.local" });
+dotenvConfig({ path: ".env.local" })
 
 const knexfile = {
   client: "pg",
-  connection: process.env.DB__CONNECTION,
+  connection: process.env.DB_CONNECTION,
   migrations: {
     directory: "./src/db/migrations",
     stub: "./src/db/migration.stub",
@@ -18,6 +17,6 @@ const knexfile = {
   },
 };
 
-console.log('Knexfile Configuration:', knexfile);
+console.log('Knexfile Configuration:', knexfile)
 
-export default knexfile;
+export default knexfile

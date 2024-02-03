@@ -33,17 +33,19 @@ export const SessionProvider = (props) => {
   }
 
   useEffect(() => {
-    const jwt = localStorage.getItem(config.security.session.storageKey)
+  try {
+    if (config.security.session && config.security.session.storageKey) {
+      const jwt = localStorage.getItem(config.security.session.storageKey);
 
-    if (jwt) {
-      try {
-        const { payload } = jsonwebtoken.decode(jwt)
-        setSession(payload)
-      } catch (error) {
-        console.error('Error decoding stored JWT:', error)
+      if (jwt) {
+        const { payload } = jsonwebtoken.decode(jwt);
+        setSession(payload);
       }
     }
-  }, [])
+  } catch (error) {
+    console.error('Error while handling session:', error);
+  }
+}, [])
 
   return (
     <SessionContext.Provider

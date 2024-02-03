@@ -10,6 +10,9 @@ import UserModel from "@/db/models/UserModel"
 import knex from "knex"
 import { NotFoundError as ObjectionNotFoundError } from "objection"
 
+
+console.log('config', config)
+
 const mw = (handlers) => async (req, res) => {
   const middlewares = handlers[req.method]
   const sanitizedMiddlewares = [log, ...(middlewares || [methodNotAllowed])]
