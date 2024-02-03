@@ -7,23 +7,18 @@ import apiClient from "@/web/services/apiClient"
 
 export const getServerSideProps = async ({ query: { page } }) => {
   try {
-    console.log("Fetching todos for page:", page);
-    const data = await apiClient("/todos", { params: { page } })
-    console.log("Data received:", data)
+    const data = await apiClient("/api/todos", { params: { page } })
     return {
       props: { initialData: data },
     };
   } catch (error) {
-    console.error("Error in getServerSideProps:", error)
-    if (error instanceof AggregateError) {
-      console.error("AggregateError details:", error.errors)
-    }
-
+    console.error('Error in getServerSideProps:', error)
     return {
       props: { initialData: { result: [], meta: { count: 0 } } },
     }
   }
 }
+
 
 // eslint-disable-next-line max-lines-per-function
 const IndexPage = ({ initialData }) => {
@@ -53,11 +48,13 @@ const IndexPage = ({ initialData }) => {
   })
   const handleClickToggle = (id) => async () => {
     const todo = todos.find(({ id: todoId }) => todoId === id)
+    console.log("Toggling todo:", todo); 
     await toggleTodo(todo)
     await refetch()
   }
   const handleClickDelete = async (event) => {
     const todoId = Number.parseInt(event.target.getAttribute("data-id"), 10)
+    console.log("Deleting todo with ID:", todoId); 
     await deleteTodo(todoId)
     await refetch()
   }

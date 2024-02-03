@@ -1,14 +1,14 @@
-import { emailValidator, passwordValidator } from "@/utils/validators";
-import { useSession } from "@/web/components/SessionContext";
-import ErrorMessage from "@/web/components/ui/ErrorMessage";
-import Form from "@/web/components/ui/Form";
-import FormField from "@/web/components/ui/FormField";
-import SubmitButton from "@/web/components/ui/SubmitButton";
-import { useMutation } from "@tanstack/react-query";
-import { Formik } from "formik";
-import { useRouter } from "next/router";
-import { object } from "yup";
-const apiClient = require("@/web/services/apiClient");
+import { emailValidator, passwordValidator } from "@/utils/validators"
+import { useSession } from "@/web/components/SessionContext"
+import ErrorMessage from "@/web/components/ui/ErrorMessage"
+import Form from "@/web/components/ui/Form"
+import FormField from "@/web/components/ui/FormField"
+import SubmitButton from "@/web/components/ui/SubmitButton"
+import { useMutation } from "@tanstack/react-query"
+import { Formik } from "formik"
+import { useRouter } from "next/router"
+import { object } from "yup"
+import apiClient from "@/web/services/apiClient"
 
 const initialValues = {
   email: "",
