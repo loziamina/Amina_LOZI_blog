@@ -1,21 +1,21 @@
 import BaseModel from "@/db/models/BaseModel"
 import TodoModel from "@/db/models/TodoModel"
 
-class CategoryModel extends BaseModel {
-  static tableName = "categories"
+class PostsModel extends BaseModel {
+  static tableName = "posts"
 
   static get relationMappings() {
     return {
-      todos: {
+      posts: {
         relation: BaseModel.HasManyRelation,
-        modelClass: TodoModel,
+        modelClass: CommentsModel,
         join: {
-          from: "categories.id",
-          to: "todos.categoryId",
+          from: "posts.id",
+          to: "posts.postsId",
         },
       },
     }
   }
 }
 
-export default CategoryModel
+export default PostsModel

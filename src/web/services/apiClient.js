@@ -1,9 +1,8 @@
-import config from "@/web/config";
-import { merge } from "@corex/deepmerge";
-import axios from "axios";
+import axios from "axios"
+import { merge } from "@corex/deepmerge"
+import config from "@/web/config"
 
 const apiClient = (url, data, options) => {
-
   const jwt = typeof window !== "undefined" ? localStorage.getItem(config.security.session.cookie.key) : null
   const headers = jwt ? { authorization: jwt } : {}
 
@@ -12,7 +11,7 @@ const apiClient = (url, data, options) => {
   }
 
   return axios(url, merge([options, { headers, data, withCredentials: true }]))
-};
+}
 
 const getUrl = (resource) => {
   if (!Array.isArray(resource)) {

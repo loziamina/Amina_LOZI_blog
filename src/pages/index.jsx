@@ -1,113 +1,55 @@
 import { formatDateTimeShort } from "@/utils/formatters"
 import Loader from "@/web/components/ui/Loader"
 import Pagination from "@/web/components/ui/Pagination"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { useRouter } from "next/router"
 import apiClient from "@/web/services/apiClient"
+import Link from "next/link"
 
-export const getServerSideProps = async ({ query: { page } }) => {
+export const getServerSideProps = async ({ query: { page = 1 } }) => {
   try {
-    const data = await apiClient("/api/todos", { params: { page } })
+    const { data } = await apiClient.get("/api/posts", { params: { page } })
     return {
       props: { initialData: data },
-    };
+    }
   } catch (error) {
     console.error('Error in getServerSideProps:', error)
     return {
-      props: { initialData: { result: [], meta: { count: 0 } } },
+      props: { initialData: { posts: [], meta: { count: 0 } } },
     }
   }
 }
 
-
-// eslint-disable-next-line max-lines-per-function
 const IndexPage = ({ initialData }) => {
-  const { query } = useRouter()
-  const page = Number.parseInt(query.page || 1, 10)
-  const {
-    isFetching,
-    data: {
-      result: todos,
-      meta: { count },
-    },
-    refetch,
-  } = useQuery({
-    queryKey: ["todos", page],
-    queryFn: () => apiClient("/todos", { params: { page } }),
+  const { query } = useRouter();
+  const page = parseInt(query.page, 10) || 1;
+  const { data, isFetching } = useQuery({
+    queryKey: ["posts", page],
+    queryFn: () => apiClient.get("/api/posts", { params: { page } }).then(res => res.data),
     initialData,
-    enabled: false,
+    keepPreviousData: true,
   })
-  const { mutateAsync: toggleTodo } = useMutation({
-    mutationFn: (todo) =>
-      apiClient.patch(`/todos/${todo.id}`, {
-        isDone: !todo.isDone,
-      }),
-  })
-  const { mutateAsync: deleteTodo } = useMutation({
-    mutationFn: (todoId) => apiClient.delete(`/todos/${todoId}`),
-  })
-  const handleClickToggle = (id) => async () => {
-    const todo = todos.find(({ id: todoId }) => todoId === id)
-    console.log("Toggling todo:", todo); 
-    await toggleTodo(todo)
-    await refetch()
-  }
-  const handleClickDelete = async (event) => {
-    const todoId = Number.parseInt(event.target.getAttribute("data-id"), 10)
-    console.log("Deleting todo with ID:", todoId); 
-    await deleteTodo(todoId)
-    await refetch()
-  }
+
+  const posts = data?.posts || []
+  const count = data?.meta?.count || 0
 
   return (
     <div className="relative">
       {isFetching && <Loader />}
-      <table className="w-full">
-        <thead>
-          <tr>
-            {[
-              "#",
-              "Description",
-              "Done",
-              "Category",
-              "Created At",
-              "",
-              "🗑️",
-            ].map((label) => (
-              <td
-                key={label}
-                className="p-4 bg-slate-300 text-center font-semibold"
-              >
-                {label}
-              </td>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {todos.map(
-            ({ id, description, isDone, createdAt, category: { name } }) => (
-              <tr key={id} className="even:bg-slate-100">
-                <td className="p-4">{id}</td>
-                <td className="p-4">{description}</td>
-                <td className="p-4">{isDone ? "✅" : "❌"}</td>
-                <td className="p-4">{name}</td>
-                <td className="p-4">
-                  {formatDateTimeShort(new Date(createdAt))}
-                </td>
-                <td className="p-4">
-                  <button onClick={handleClickToggle(id)}>Toggle</button>
-                </td>
-                <td className="p-4">
-                  <button data-id={id} onClick={handleClickDelete}>
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ),
-          )}
-        </tbody>
-      </table>
-      <Pagination count={count} page={page} className="mt-8" />
+      <h1>Latest Posts</h1>
+      <div>
+        {posts.map(({ id, title, content, createdAt, author }) => (
+          <article key={id} className="mb-4 p-4 bg-white shadow">
+            <h2 className="text-xl font-bold">{title}</h2>
+            <p>{content.substring(0, 200)}...</p>
+            <div className="text-sm">By {author.name} on {formatDateTimeShort(new Date(createdAt))}</div>
+            <Link href={`/posts/${id}`}>
+              <a className="text-blue-500 hover:underline">Read more</a>
+            </Link>
+          </article>
+        ))}
+      </div>
+      <Pagination count={count} page={page} />
     </div>
   )
 }

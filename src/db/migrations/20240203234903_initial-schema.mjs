@@ -1,5 +1,5 @@
 export const up = async (db) => {
-  await db.schema.createTable("todos", (table) => {
+  await db.schema.createTable("posts", (table) => {
     table.increments("id")
     table.text("description")
     table.boolean("isDone")
@@ -7,5 +7,5 @@ export const up = async (db) => {
 }
 
 export const down = async (db) => {
-  await db.schema.dropTable("todos")
+  await db.schema.dropTable("posts")
 }

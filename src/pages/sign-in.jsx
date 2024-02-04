@@ -60,7 +60,7 @@ const SignInPage = () => {
               label="Password"
               className="mb-4"
             />
-            <SubmitButton className="w-full">Sign In</SubmitButton>
+            <SubmitButton>Sign In</SubmitButton>
           </Form>
         </Formik>
       </div>
