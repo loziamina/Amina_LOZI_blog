@@ -28,12 +28,12 @@ const PostsPage = ({ initialData }) => {
     initialData,
     enabled: false,
   })
-  const { mutateAsync: deleteTodo } = useMutation({
+  const { mutateAsync: deletePosts } = useMutation({
     mutationFn: (postsId) => apiClient.delete(`/posts/${postsId}`),
   })
   const handleClickDelete = async (event) => {
     const postsId = Number.parseInt(event.target.getAttribute("data-id"), 10)
-    await deleteTodo(postsId)
+    await deletePosts(postsId)
     await refetch()
   }
 
@@ -54,10 +54,10 @@ const PostsPage = ({ initialData }) => {
           </tr>
         </thead>
         <tbody>
-          {posts.map(({ id, name }) => (
+          {posts.map(({ id, description }) => (
             <tr key={id} className="even:bg-slate-100">
               <td className="p-4">{id}</td>
-              <td className="p-4">{name}</td>
+              <td className="p-4">{description}</td>
               <td className="p-4">
                 <button data-id={id} onClick={handleClickDelete}>
                   Delete

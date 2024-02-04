@@ -10,7 +10,7 @@ class PostsModel extends BaseModel {
         relation: BaseModel.HasManyRelation,
         modelClass: CommentsModel,
         join: {
-          from: "posts.id",
+          from: "posts.postsId",
           to: "posts.postsId",
         },
       },

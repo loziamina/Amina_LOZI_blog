@@ -29,8 +29,8 @@ export const seed = async db => {
     await db('comments').insert(
       [...Array(5)].map(() => ({
         description:  faker.word.words({ count: { min: 2, max: 10 } }),
-        posts_Comments_Id: faker.number.int({ min: 0, max: categories.length - 1 }).idPosts,
-        users_Comments_Id: faker.number.int({ min: 0, max: categories.length - 1 }).idUser,
+        posts_Comments_Id: faker.number.int({ min: 0, max: post.length - 1 }).idPosts,
+        users_Comments_Id: faker.number.int({ min: 0, max: post.length - 1 }).idUser,
       }))
     )
   })

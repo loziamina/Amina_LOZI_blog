@@ -10,7 +10,7 @@ class CommentsModel extends BaseModel {
         modelClass: PostsModel,
         join: {
           from: "comments.postsId",
-          to: "posts.id",
+          to: "posts.postsId",
         },
       },
     }
