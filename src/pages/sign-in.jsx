@@ -60,7 +60,7 @@ const SignInPage = () => {
               label="Password"
               className="mb-4"
             />
-            <SubmitButton>Sign In</SubmitButton>
+            <SubmitButton className="bg-blue-500 text-white hover:bg-blue-600">Sign In</SubmitButton>
           </Form>
         </Formik>
       </div>

@@ -2,15 +2,28 @@ import axios from "axios"
 import { merge } from "@corex/deepmerge"
 import config from "@/web/config"
 
-const apiClient = (url, data, options) => {
-  const jwt = typeof window !== "undefined" ? localStorage.getItem(config.security.session.cookie.key) : null
-  const headers = jwt ? { authorization: jwt } : {}
+const apiClient = async (url, data = null, options = {}) => {
+  try {
+    const jwt = typeof window !== "undefined" ? localStorage.getItem(config.security.session.cookie.key) : null
+    const headers = jwt ? { authorization: jwt } : {}
 
-  if (!options) {
-    return axios(url, merge([data, { headers }, { withCredentials: true }]))
+    if (!options.method) {
+      options.method = data ? "POST" : "GET"
+    }
+
+    if (data) {
+      options.data = data
+    }
+
+    options.headers = merge([headers, options.headers])
+    options.withCredentials = true
+
+    const response = await axios(url, options)
+
+    return response.data
+  } catch (error) {
+    throw error
   }
-
-  return axios(url, merge([options, { headers, data, withCredentials: true }]))
 }
 
 const getUrl = (resource) => {
@@ -21,13 +34,16 @@ const getUrl = (resource) => {
   const [resourceName, resourceId] = resource
 
   return `/api/${resourceName}/${resourceId}`
-};
+}
 
-const makeResourceAction = (method, hasData = true) =>
-  hasData
-    ? (resource, data, options) =>
-        apiClient(getUrl(resource), data, { method, ...options })
-    : (resource, options) => apiClient(getUrl(resource), { method, ...options })
+const makeResourceAction = (method, hasData = true) => async (resource, data, options) => {
+  try {
+    const response = await apiClient(getUrl(resource), data, { method, ...options })
+    return response
+  } catch (error) {
+    throw error
+  }
+}
 
 export const readResource = makeResourceAction("GET", false)
 export const createResource = makeResourceAction("POST")
