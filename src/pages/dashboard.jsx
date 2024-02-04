@@ -3,8 +3,9 @@ import apiClient from '@/web/services/apiClient'
 import Loader from '../web/components/ui/Loader'
 
 const DashboardPage = ({ stats, error }) => {
+ 
   if (error) {
-    return <p className="text-red-500">Error: {error}</p>;
+    return <p className="text-red-500">Error: {error}</p>
   }
 
   if (!stats) {
@@ -69,18 +70,18 @@ const DashboardPage = ({ stats, error }) => {
 
 export async function getServerSideProps() {
   try {
-    const response = await apiClient.get("/dashboard");
-    const data = await response.json();
+    const response = await apiClient.get("/dashboard")
+    const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.message || "An error occurred");
+      throw new Error(data.message || "An error occurred")
     }
 
     return {
       props: { stats: data },
     }
   } catch (error) {
-    console.error("Error fetching dashboard data:", error);
+    console.error("Error fetching dashboard data:", error)
 
     return {
       props: { stats: null, error: 'Error fetching data' },

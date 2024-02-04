@@ -34,7 +34,7 @@ const handle = mw({
       },
       body: {
         description: commentsDescriptionValidator.optional(),
-        categoryId: idValidator.optional(),
+        postId: idValidator.optional(),
         isDone: statusValidator.optional(),
       },
     }),

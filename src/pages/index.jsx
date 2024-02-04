@@ -1,101 +1,45 @@
-import { formatDateTimeShort } from "@/utils/formatters";
-import Loader from "@/web/components/ui/Loader";
-import Pagination from "@/web/components/ui/Pagination";
-import apiClient from "@/web/services/apiClient";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useRouter } from "next/router";
-
-export const getServerSideProps = async ({ query: { page } }) => {
-  const data = await apiClient("/api/posts", { params: { page } })
-
-  return {
-    props: { initialData: data },
-  }
-}
+import { formatDateTimeShort } from "@/utils/formatters"
+import Loader from "@/web/components/ui/Loader"
+import Pagination from "@/web/components/ui/Pagination"
+import { useQuery } from "@tanstack/react-query"
+import { useRouter } from "next/router"
+import apiClient from "@/web/services/apiClient"
+import Link from "@/web/components/ui/Link"
 
 const IndexPage = ({ initialData }) => {
   const { query } = useRouter()
-  const page = Number.parseInt(query.page || 1, 10)
-  const {
-    isFetching,
-    data: {
-      result: posts,
-      meta: { count },
-    },
-    refetch,
-  } = useQuery({
+  const page = parseInt(query.page, 10) || 1
+  const { data, isFetching } = useQuery({
     queryKey: ["posts", page],
-    queryFn: () => apiClient("/api/posts", { params: { page } }),
+    queryFn: () => apiClient.get("/posts", { params: { page } }).then(res => res.data),
     initialData,
-    enabled: false,
-  })
-  const { mutateAsync: toggleComment } = useMutation({
-    mutationFn: (comment) =>
-      apiClient.patch(`/api/comments/${comment.id}`, {
-        isDone: !comment.isDone,
-      }),
-  })
-  const { mutateAsync: deleteComment } = useMutation({
-    mutationFn: (commentId) => apiClient.delete(`api//comments/${commentId}`),
+    keepPreviousData: true
   })
 
-  const handleClickToggle = (comment) => async () => {
-    await toggleComment(comment);
-    await refetch();
-  }
-
-  const handleClickDelete = async (commentId) => {
-    await deleteComment(commentId);
-    await refetch();
-  }
+  const posts = data?.posts || []
+  const count = data?.meta?.count || 0
 
   return (
-    <div className="relative">
+    <div className="relative bg-gray-100 min-h-screen">
       {isFetching && <Loader />}
-      <table className="w-full">
-        <thead>
-          <tr>
-            {[
-              "#",
-              "Description",
-              "Done",
-              "Post",
-              "Created At",
-              "",
-              "🗑️",
-            ].map((label) => (
-              <td
-                key={label}
-                className="p-4 bg-slate-300 text-center font-semibold"
-              >
-                {label}
-              </td>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {posts.map(({ id, description, isDone, createdAt, post }) => (
-            <tr key={id} className="even:bg-slate-100">
-              <td className="p-4">{id}</td>
-              <td className="p-4">{description}</td>
-              <td className="p-4">{isDone ? "✅" : "❌"}</td>
-              <td className="p-4">{post.title}</td>
-              <td className="p-4">
-                {formatDateTimeShort(new Date(createdAt))}
-              </td>
-              <td className="p-4">
-                <button onClick={handleClickToggle({ id, isDone })}>Toggle</button>
-              </td>
-              <td className="p-4">
-                <button data-id={id} onClick={() => handleClickDelete(id)}>
-                  Delete
-                </button>
-              </td>
-            </tr>
+      <div className="bg-white p-4 shadow">
+        <h1 className="text-3xl font-semibold text-center p-4">Latest Posts</h1>
+        <div>
+          {posts.map(({ id, title, content, createdAt, author }) => (
+            <article key={id} className="mb-4 p-4 bg-white shadow">
+              <h2 className="text-2xl font-bold">{title}</h2>
+              <p className="text-gray-600">{content.substring(0, 200)}...</p>
+              <div className="text-sm text-gray-500">
+                By {author.email} on {formatDateTimeShort(new Date(createdAt))}
+              </div>
+              <Link href={`/posts/${id}`}>
+                <a className="text-blue-500 hover:underline">Read more</a>
+              </Link>
+            </article>
           ))}
-        </tbody>
-      </table>
-      <Pagination count={count} page={page} className="mt-8" />
+        </div>
+        <Pagination count={count} page={page} />
+      </div>
     </div>
   )
 }

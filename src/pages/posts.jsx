@@ -11,7 +11,7 @@ export const getServerSideProps = async ({ query: { page } }) => {
     props: { initialData: data },
   }
 }
-
+// eslint-disable-next-line max-lines-per-function
 const PostsPage = ({ initialData }) => {
   const { query } = useRouter()
   const page = Number.parseInt(query.page || 1, 10)
@@ -28,14 +28,12 @@ const PostsPage = ({ initialData }) => {
     initialData,
     enabled: false,
   })
-
-  const { mutateAsync: deletePost } = useMutation({
-    mutationFn: (postId) => apiClient.delete(`/posts/${postId}`),
+  const { mutateAsync: deleteTodo } = useMutation({
+    mutationFn: (postsId) => apiClient.delete(`/posts/${postsId}`),
   })
-
   const handleClickDelete = async (event) => {
-    const postId = Number.parseInt(event.target.getAttribute("data-id"), 10)
-    await deletePost(postId)
+    const postsId = Number.parseInt(event.target.getAttribute("data-id"), 10)
+    await deleteTodo(postsId)
     await refetch()
   }
 
@@ -56,10 +54,10 @@ const PostsPage = ({ initialData }) => {
           </tr>
         </thead>
         <tbody>
-          {posts.map(({ id, description }) => (
+          {posts.map(({ id, name }) => (
             <tr key={id} className="even:bg-slate-100">
               <td className="p-4">{id}</td>
-              <td className="p-4">{description}</td>
+              <td className="p-4">{name}</td>
               <td className="p-4">
                 <button data-id={id} onClick={handleClickDelete}>
                   Delete
