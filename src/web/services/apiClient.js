@@ -1,53 +1,47 @@
-import axios from "axios"
-import { merge } from "@corex/deepmerge"
 import config from "@/web/config"
+import axios, { AxiosError } from "axios"
 
-const apiClient = async (url, data = null, options = {}) => {
-  try {
-    const jwt = typeof window !== "undefined" ? localStorage.getItem(config.security.session.cookie.key) : null
-    const headers = jwt ? { authorization: jwt } : {}
+export class ApiClientError extends Error {
+  data = null
 
-    if (!options.method) {
-      options.method = data ? "POST" : "GET"
+  constructor(err) {
+    super(err)
+
+    const {
+      response: { data },
+    } = err
+
+    this.data = data
+
+    if (typeof data === "string") {
+      this.message = data
+
+      return
     }
 
-    if (data) {
-      options.data = data
-    }
-
-    options.headers = merge([headers, options.headers])
-    options.withCredentials = true
-
-    const response = await axios(url, options)
-
-    return response.data
-  } catch (error) {
-    throw error
+    this.message = data?.error?.message || data?.error || data
   }
 }
+const createApiClient =
+  (method = "GET") =>
+  (...args) => {
+    const client = axios.create({
+      baseURL: config.api.baseUrl,
+    })
 
-const getUrl = (resource) => {
-  if (!Array.isArray(resource)) {
-    return `/api/${resource}`
+    return client[method.toLowerCase()](...args)
+      .then(({ data }) => data)
+      .catch((err) => {
+        if (!(err instanceof AxiosError)) {
+          throw err
+        }
+
+        throw new ApiClientError(err)
+      })
   }
-
-  const [resourceName, resourceId] = resource
-
-  return `/api/${resourceName}/${resourceId}`
-}
-
-const makeResourceAction = (method, hasData = true) => async (resource, data, options) => {
-  try {
-    const response = await apiClient(getUrl(resource), data, { method, ...options })
-    return response
-  } catch (error) {
-    throw error
-  }
-}
-
-export const readResource = makeResourceAction("GET", false)
-export const createResource = makeResourceAction("POST")
-export const updateResource = makeResourceAction("PATCH")
-export const deleteResource = makeResourceAction("DELETE", false)
+const apiClient = createApiClient()
+apiClient.post = createApiClient("POST")
+apiClient.patch = createApiClient("PATCH")
+apiClient.delete = createApiClient("DELETE")
 
 export default apiClient

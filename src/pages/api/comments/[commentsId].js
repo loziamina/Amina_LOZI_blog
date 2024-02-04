@@ -1,29 +1,83 @@
-import db from '../../../db/models'
+import auth from "@/api/middlewares/auth"
+import { validate } from "@/api/middlewares/validate"
+import mw from "@/api/mw"
+import {
+  idValidator,
+  statusValidator,
+  commentsDescriptionValidator,
+} from "@/utils/validators"
 
-export default async function handler(req, res) {
-  const { commentId } = req.query
+const handle = mw({
+  GET: [
+    validate({
+      query: {
+        commentsId: idValidator,
+      },
+    }),
+    async ({
+      models: { CommentsModel },
+      input: {
+        query: { commentsId },
+      },
+      res,
+    }) => {
+      const comments = await CommentsModel.query().findById(commentsId).throwIfNotFound()
 
-  switch (req.method) {
-    case 'GET':
-      const comment = await db.comments.findUnique({ where: { id: parseInt(commentId) } })
-      res.status(200).json(comment)
-      break;
+      res.send(comments)
+    },
+  ],
+  PATCH: [
+    auth,
+    validate({
+      query: {
+        commentsId: idValidator,
+      },
+      body: {
+        description: commentsDescriptionValidator.optional(),
+        categoryId: idValidator.optional(),
+        isDone: statusValidator.optional(),
+      },
+    }),
+    async ({
+      models: { CommentsModel },
+      input: {
+        body,
+        query: { commentsId },
+      },
+      res,
+    }) => {
+      const updatedcomments = await CommentsModel.query()
+        .updateAndFetchById(commentsId, {
+          ...body,
+          updatedAt: CommentsModel.fn.now(),
+        })
+        .withGraphFetched("posts")
+        .throwIfNotFound()
 
-    case 'PUT':
-      const updatedComment = await db.comments.update({
-        where: { id: parseInt(commentId) },
-        data: { ...req.body },
-      });
-      res.status(200).json(updatedComment)
-      break
+      res.send(updatedcomments)
+    },
+  ],
+  DELETE: [
+    auth,
+    validate({
+      query: {
+        commentsId: idValidator,
+      },
+    }),
+    async ({
+      models: { CommentsModel },
+      input: {
+        query: { commentsId },
+      },
+      res,
+    }) => {
+      const comments = await CommentsModel.query().findById(commentsId).throwIfNotFound()
 
-    case 'DELETE':
-      await db.comments.delete({ where: { id: parseInt(commentId) } })
-      res.status(200).json({ message: 'Comment deleted successfully' })
-      break;
+      await comments.$query().delete()
 
-    default:
-      res.setHeader('Allow', ['GET', 'PUT', 'DELETE'])
-      res.status(405).end(`Method ${req.method} Not Allowed`)
-  }
-}
+      res.send(comments)
+    },
+  ],
+})
+
+export default handle

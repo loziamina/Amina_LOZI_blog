@@ -1,30 +1,33 @@
-import faker from 'faker'
+import { faker } from "@faker-js/faker"
 
 export const seed = async (db) => {
-  await db('comments').del()
-  await db('posts').del()
-  await db('users').del()
+  await db("comments").del()
+  await db("posts").del()
+  await db("users").del()
 
- 
-  const userData = [...Array(5)].map(() => ({
-    email: faker.internet.email(),
-    passwordHash: 'alskdjalsdkjasdlkj',
-    passwordSalt: 'alskdjalsdkjasdlkj'
-  }))
-  await db('users').insert(userData)
 
-  const posts = await db('posts')
-    .insert(
-      [...Array(30)].map(() => ({
-        name: faker.random.word()
-      }))
-    )
-    .returning('*')
+  await db("users").insert(
+    [...Array(5)].map(() => ({
+      email: faker.internet.email(),
+      passwordHash: "alskdjalsdkjasdlkj",
+      passwordSalt: "alskdjalsdkjasdlkj",
+    }))
+  )
 
-  const commentsData = [...Array(3000)].map(() => ({
-    description: faker.random.words(faker.random.number({ min: 2, max: 10 })),
-    isDone: faker.random.boolean(),
-    postsId: posts[faker.random.number({ min: 0, max: posts.length - 1 })].id
-  }))
-  await db('comments').insert(commentsData)
+  const users = await db("users").select("idUser");
+  await db("posts").insert(
+    [...Array(100)].map(() => ({
+      description: faker.lorem.sentence(),
+      users_Id: faker.random.arrayElement(users).id,
+    }))
+  )
+
+  const posts = await db("posts").select("idPosts");
+  await db("comments").insert(
+    [...Array(500)].map(() => ({
+      description: faker.lorem.sentence(),
+      users_Comments_Id: faker.random.arrayElement(users).id,
+      posts_Comments_Id: faker.random.arrayElement(posts).id,
+    }))
+  )
 }

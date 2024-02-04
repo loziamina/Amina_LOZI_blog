@@ -1,29 +1,58 @@
-import db from '../../../db/models'
+import mw from "@/api/mw"
 
-export default async function handler(req, res) {
-  const { postId } = req.query
+const handle = mw({
+  GET: [
+    async ({
+      models: { PostsModel },
+      req: {
+        query: { postId },
+      },
+      res,
+    }) => {
+      const post = await PostsModel.query()
+        .findById(postId)
+        .throwIfNotFound()
 
-  switch (req.method) {
-    case 'GET':
-      const post = await db.posts.findUnique({ where: { id: parseInt(postId) } })
-      res.status(200).json(post)
-      break;
+      res.send(post)
+    },
+  ],
+  PATCH: [
+    async ({
+      models: { PostsModel },
+      req: {
+        body,
+        query: { postId },
+      },
+      res,
+    }) => {
+      const updatedPost = await PostsModel.query()
+        .updateAndFetchById(postId, {
+          ...body,
+          updatedAt: PostsModel.fn.now(),
+        })
+        .throwIfNotFound()
 
-    case 'PUT':
-      const updatedPost = await db.posts.update({
-        where: { id: parseInt(postId) },
-        data: { ...req.body },
-      })
-      res.status(200).json(updatedPost)
-      break;
+      res.send(updatedPost)
+    },
+  ],
+  DELETE: [
+    async ({
+      models: { CommentsModel, PostsModel },
+      req: {
+        query: { postId },
+      },
+      res,
+    }) => {
+      const post = await PostsModel.query()
+        .findById(postId)
+        .throwIfNotFound()
 
-    case 'DELETE':
-      await db.posts.delete({ where: { id: parseInt(postId) } })
-      res.status(200).json({ message: 'Post deleted successfully' })
-      break;
+      await CommentsModel.query().delete().where({ postId })
+      await post.$query().delete()
 
-    default:
-      res.setHeader('Allow', ['GET', 'PUT', 'DELETE'])
-      res.status(405).end(`Method ${req.method} Not Allowed`)
-  }
-}
+      res.send(post)
+    },
+  ],
+})
+
+export default handle
