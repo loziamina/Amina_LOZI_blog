@@ -1,80 +1,101 @@
-import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import apiClient from '@/web/services/apiClient'
-import Loader from "@/web/components/ui/Loader"
-import Pagination from "@/web/components/ui/Pagination"
-import { useRouter } from "next/router"
-import Link from "next/link"
+import { formatDateTimeShort } from "@/utils/formatters";
+import Loader from "@/web/components/ui/Loader";
+import Pagination from "@/web/components/ui/Pagination";
+import apiClient from "@/web/services/apiClient";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/router";
 
-export const getServerSideProps = async ({ query: { page = 1 } }) => {
-  const { data } = await apiClient.get("/api/posts", { params: { page } })
+export const getServerSideProps = async ({ query: { page } }) => {
+  const data = await apiClient("/api/posts", { params: { page } })
+
   return {
-    props: { initialData: data }
+    props: { initialData: data },
   }
 }
 
 const IndexPage = ({ initialData }) => {
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const queryClient = useQueryClient()
-  const router = useRouter()
-  const page = parseInt(query.page, 10) || 1
-  const { data, isFetching } = useQuery(["posts", page], () => apiClient.get(`/api/posts?page=${page}`).then(res => res.data), {
+  const { query } = useRouter()
+  const page = Number.parseInt(query.page || 1, 10)
+  const {
+    isFetching,
+    data: {
+      result: posts,
+      meta: { count },
+    },
+    refetch,
+  } = useQuery({
+    queryKey: ["posts", page],
+    queryFn: () => apiClient("/api/posts", { params: { page } }),
     initialData,
-    keepPreviousData: true
+    enabled: false,
+  })
+  const { mutateAsync: toggleComment } = useMutation({
+    mutationFn: (comment) =>
+      apiClient.patch(`/api/comments/${comment.id}`, {
+        isDone: !comment.isDone,
+      }),
+  })
+  const { mutateAsync: deleteComment } = useMutation({
+    mutationFn: (commentId) => apiClient.delete(`api//comments/${commentId}`),
   })
 
-  const createPostMutation = useMutation(newPost => apiClient.post('/api/posts', newPost), {
-    onSuccess: () => {
-      queryClient.invalidateQueries(['posts'])
-    }
-  })
-
-  const handleSubmit = async (event) => {
-    event.preventDefault()
-    await createPostMutation.mutateAsync({ title, content })
-    setTitle('')
-    setContent('')
+  const handleClickToggle = (comment) => async () => {
+    await toggleComment(comment);
+    await refetch();
   }
 
-  const posts = data?.posts || []
-  const count = data?.meta?.count || 0
+  const handleClickDelete = async (commentId) => {
+    await deleteComment(commentId);
+    await refetch();
+  }
 
   return (
     <div className="relative">
-      <h1>Latest Posts</h1>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="title">Title</label>
-          <input
-            type="text"
-            id="title"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="content">Content</label>
-          <textarea
-            id="content"
-            rows={4}
-            value={content}
-            onChange={e => setContent(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Create Post</button>
-      </form>
-      {isFetching ? <Loader /> : posts.map(({ id, title, content, createdAt, author }) => (
-        <article key={id}>
-          <h2>{title}</h2>
-          <p>{content.substring(0, 200)}</p>
-          <div>By {author.email} on {new Date(createdAt).toLocaleString()}</div>
-          <Link href={`/posts/${id}`}><a>Read more</a></Link>
-        </article>
-      ))}
-      <Pagination count={count} page={page} />
+      {isFetching && <Loader />}
+      <table className="w-full">
+        <thead>
+          <tr>
+            {[
+              "#",
+              "Description",
+              "Done",
+              "Post",
+              "Created At",
+              "",
+              "🗑️",
+            ].map((label) => (
+              <td
+                key={label}
+                className="p-4 bg-slate-300 text-center font-semibold"
+              >
+                {label}
+              </td>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {posts.map(({ id, description, isDone, createdAt, post }) => (
+            <tr key={id} className="even:bg-slate-100">
+              <td className="p-4">{id}</td>
+              <td className="p-4">{description}</td>
+              <td className="p-4">{isDone ? "✅" : "❌"}</td>
+              <td className="p-4">{post.title}</td>
+              <td className="p-4">
+                {formatDateTimeShort(new Date(createdAt))}
+              </td>
+              <td className="p-4">
+                <button onClick={handleClickToggle({ id, isDone })}>Toggle</button>
+              </td>
+              <td className="p-4">
+                <button data-id={id} onClick={() => handleClickDelete(id)}>
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <Pagination count={count} page={page} className="mt-8" />
     </div>
   )
 }

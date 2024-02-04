@@ -1,5 +1,5 @@
 import BaseModel from "@/db/models/BaseModel"
-import TodoModel from "@/db/models/TodoModel"
+import CommentsModel from "@/db/models/CommentsModel"
 
 class PostsModel extends BaseModel {
   static tableName = "posts"

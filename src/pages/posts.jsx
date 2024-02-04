@@ -11,7 +11,7 @@ export const getServerSideProps = async ({ query: { page } }) => {
     props: { initialData: data },
   }
 }
-// eslint-disable-next-line max-lines-per-function
+
 const PostsPage = ({ initialData }) => {
   const { query } = useRouter()
   const page = Number.parseInt(query.page || 1, 10)
@@ -28,12 +28,14 @@ const PostsPage = ({ initialData }) => {
     initialData,
     enabled: false,
   })
-  const { mutateAsync: deleteComments } = useMutation({
+
+  const { mutateAsync: deletePost } = useMutation({
     mutationFn: (postId) => apiClient.delete(`/posts/${postId}`),
   })
+
   const handleClickDelete = async (event) => {
     const postId = Number.parseInt(event.target.getAttribute("data-id"), 10)
-    await deleteComments(postId)
+    await deletePost(postId)
     await refetch()
   }
 
